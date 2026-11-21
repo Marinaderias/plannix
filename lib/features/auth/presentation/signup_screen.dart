@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/auth_repository.dart';
+import '../../../core/theme/app_theme.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -130,18 +131,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     },
                   ),
                   const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: _isLoading ? null : _submit,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Sign Up'),
-                    ),
+                  GradientButton(
+                    label: 'Sign Up',
+                    isLoading: _isLoading,
+                    onPressed: _submit,
                   ),
                 ],
               ),

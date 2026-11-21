@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../data/auth_repository.dart';
 import 'signup_screen.dart';
 
@@ -53,42 +54,65 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: Form(
               key: _formKey,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(Icons.event_available,
-                      size: 72, color: theme.colorScheme.primary),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Plannix',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.headlineLarge
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                  Center(
+                    child: ShaderMask(
+                      shaderCallback: (rect) =>
+                          AppColors.gradient.createShader(rect),
+                      child: const Icon(Icons.all_inclusive,
+                          size: 88, color: Colors.white),
+                    ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Manage your time, simply.',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium,
+                  const SizedBox(height: 8),
+                  Center(
+                    child: ShaderMask(
+                      shaderCallback: (rect) =>
+                          AppColors.gradient.createShader(rect),
+                      child: const Text(
+                        'TIMORA',
+                        style: TextStyle(
+                          fontSize: 28,
+                          letterSpacing: 6,
+                          fontWeight: FontWeight.w300,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 32),
+                  const Text(
+                    'Hello again! 👋',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.purple,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Welcome back to Timora',
+                    style: TextStyle(color: AppColors.textMuted),
+                  ),
+                  const SizedBox(height: 28),
+                  const Text('Email',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(),
+                      hintText: 'example@mail.com',
+                      prefixIcon: Icon(Icons.person_outline),
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -101,17 +125,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
+                  const Text('Password',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
-                      labelText: 'Password',
+                      hintText: '••••••••',
                       prefixIcon: const Icon(Icons.lock_outline),
-                      border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
                         icon: Icon(_obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility),
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined),
                         onPressed: () => setState(
                             () => _obscurePassword = !_obscurePassword),
                       ),
@@ -123,30 +149,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: _isLoading ? null : _submit,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Log In'),
-                    ),
+                  const SizedBox(height: 28),
+                  GradientButton(
+                    label: 'Login',
+                    isLoading: _isLoading,
+                    onPressed: _submit,
                   ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: _isLoading
-                        ? null
-                        : () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const SignupScreen(),
-                              ),
-                            ),
-                    child: const Text("Don't have an account? Sign Up"),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text("Don't have an account? ",
+                          style: TextStyle(color: AppColors.textMuted)),
+                      GestureDetector(
+                        onTap: _isLoading
+                            ? null
+                            : () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const SignupScreen(),
+                                  ),
+                                ),
+                        child: const Text(
+                          'Sign up',
+                          style: TextStyle(
+                            color: AppColors.purple,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
