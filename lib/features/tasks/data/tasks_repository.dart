@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../auth/data/auth_repository.dart';
 import '../domain/category.dart';
 import '../domain/task.dart';
+import '../domain/task_enums.dart';
 
 class TasksRepository {
   TasksRepository(this._client);
@@ -26,8 +27,10 @@ class TasksRepository {
     await _client.from('tasks').update(task.toMap()).eq('id', task.id);
   }
 
-  Future<void> updateStatus(String taskId, TaskStatusValue status) async {
-    await _client.from('tasks').update({'status': status}).eq('id', taskId);
+  Future<void> updateStatus(String taskId, TaskStatus status) async {
+    await _client
+        .from('tasks')
+        .update({'status': status.value}).eq('id', taskId);
   }
 
   Future<void> deleteTask(String taskId) async {
@@ -39,8 +42,6 @@ class TasksRepository {
     return data.map<Category>((row) => Category.fromMap(row)).toList();
   }
 }
-
-typedef TaskStatusValue = String;
 
 final tasksRepositoryProvider = Provider<TasksRepository>((ref) {
   return TasksRepository(ref.watch(supabaseClientProvider));
