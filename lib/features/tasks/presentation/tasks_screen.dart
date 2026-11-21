@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/tasks_filter.dart';
 import '../data/tasks_providers.dart';
 import '../data/tasks_repository.dart';
 import '../domain/task.dart';
 import '../domain/task_enums.dart';
-import 'widgets/task_card.dart';
 import 'task_form_screen.dart';
+import 'widgets/filter_bar.dart';
+import 'widgets/task_card.dart';
 
 class TasksScreen extends ConsumerWidget {
   const TasksScreen({super.key});
@@ -38,8 +40,7 @@ class TasksScreen extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child:
-                const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -62,7 +63,8 @@ class TasksScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tasksAsync = ref.watch(tasksProvider);
+    final tasksAsync = ref.watch(filteredTasksProvider);
+    final filter = ref.watch(tasksFilterProvider);
 
     return tasksAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -83,35 +85,45 @@ class TasksScreen extends ConsumerWidget {
         );
       },
       data: (tasks) {
-        if (tasks.isEmpty) {
-          return const Center(
-            child: Text('No tasks yet.\nTap + to add your first one.',
-                textAlign: TextAlign.center),
-          );
-        }
-        return RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(tasksProvider);
-            await ref.read(tasksProvider.future);
-          },
-          child: ListView.builder(
-            padding: const EdgeInsets.only(top: 8, bottom: 88),
-            itemCount: tasks.length,
-            itemBuilder: (context, index) {
-              final task = tasks[index];
-              return TaskCard(
-                task: task,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => TaskFormScreen(task: task),
-                  ),
-                ),
-                onStatusChanged: (status) =>
-                    _changeStatus(context, ref, task, status),
-                onDelete: () => _delete(context, ref, task),
-              );
-            },
-          ),
+        return Column(
+          children: [
+            const FilterBar(),
+            Expanded(
+              child: tasks.isEmpty
+                  ? Center(
+                      child: Text(
+                        filter.isActive
+                            ? 'No tasks match these filters.'
+                            : 'No tasks yet.\nTap + to add your first one.',
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: () async {
+                        ref.invalidate(tasksProvider);
+                        await ref.read(tasksProvider.future);
+                      },
+                      child: ListView.builder(
+                        padding: const EdgeInsets.only(top: 4, bottom: 88),
+                        itemCount: tasks.length,
+                        itemBuilder: (context, index) {
+                          final task = tasks[index];
+                          return TaskCard(
+                            task: task,
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => TaskFormScreen(task: task),
+                              ),
+                            ),
+                            onStatusChanged: (status) =>
+                                _changeStatus(context, ref, task, status),
+                            onDelete: () => _delete(context, ref, task),
+                          );
+                        },
+                      ),
+                    ),
+            ),
+          ],
         );
       },
     );

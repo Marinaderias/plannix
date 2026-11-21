@@ -6,6 +6,7 @@ import 'core/constants/supabase_constants.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/home/home_screen.dart';
+import 'core/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,12 +25,9 @@ class PlannixApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Plannix',
+      title: 'Timora',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorSchemeSeed: Colors.indigo,
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light,
       home: const AuthGate(),
     );
   }
