@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../data/tasks_providers.dart';
 import '../data/tasks_repository.dart';
 import '../domain/task.dart';
@@ -21,13 +22,13 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _titleController;
   late final TextEditingController _descriptionController;
-  late final TextEditingController _durationController;
 
   String? _categoryId;
   late TaskPriority _priority;
   late TaskStatus _status;
   late Recurrence _recurrence;
   DateTime? _deadline;
+  int? _durationMinutes;
   bool _isSaving = false;
 
   bool get _isEditing => widget.task != null;
@@ -39,21 +40,18 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
     _titleController = TextEditingController(text: task?.title ?? '');
     _descriptionController =
         TextEditingController(text: task?.description ?? '');
-    _durationController = TextEditingController(
-      text: task?.estimatedDurationMinutes?.toString() ?? '',
-    );
     _categoryId = task?.categoryId;
     _priority = task?.priority ?? TaskPriority.medium;
     _status = task?.status ?? TaskStatus.pending;
     _recurrence = task?.recurrence ?? Recurrence.none;
     _deadline = task?.deadline;
+    _durationMinutes = task?.estimatedDurationMinutes;
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
-    _durationController.dispose();
     super.dispose();
   }
 
@@ -76,15 +74,24 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
     if (time == null) return;
 
     setState(() {
-      _deadline = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+      _deadline =
+          DateTime(date.year, date.month, date.day, time.hour, time.minute);
     });
+  }
+
+  Future<void> _pickDuration() async {
+    final current = _durationMinutes ?? 60;
+    final result = await showDialog<int>(
+      context: context,
+      builder: (_) => _DurationDialog(initialMinutes: current),
+    );
+    if (result != null) setState(() => _durationMinutes = result);
   }
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
     final description = _descriptionController.text.trim();
-    final duration = int.tryParse(_durationController.text.trim());
 
     final task = Task(
       id: widget.task?.id ?? '',
@@ -94,7 +101,7 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
       priority: _priority,
       status: _status,
       deadline: _deadline,
-      estimatedDurationMinutes: duration,
+      estimatedDurationMinutes: _durationMinutes,
       // Keep the scheduled time if the task already has one.
       startTime: widget.task?.startTime,
       endTime: widget.task?.endTime,
@@ -128,36 +135,36 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
     final categoriesAsync = ref.watch(categoriesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? 'Edit Task' : 'New Task')),
+      appBar: AppBar(title: Text(_isEditing ? 'Edit Task' : 'Add New Task')),
       body: SafeArea(
         child: Form(
           key: _formKey,
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              const _Label('Title'),
               TextFormField(
                 controller: _titleController,
                 textCapitalization: TextCapitalization.sentences,
                 decoration: const InputDecoration(
-                  labelText: 'Title',
-                  border: OutlineInputBorder(),
+                  hintText: 'e.g. Complete project report',
                 ),
                 validator: (value) => (value == null || value.trim().isEmpty)
                     ? 'Please enter a title'
                     : null,
               ),
               const SizedBox(height: 16),
+              const _Label('Description'),
               TextFormField(
                 controller: _descriptionController,
                 maxLines: 3,
                 textCapitalization: TextCapitalization.sentences,
                 decoration: const InputDecoration(
-                  labelText: 'Description (optional)',
-                  alignLabelWithHint: true,
-                  border: OutlineInputBorder(),
+                  hintText: 'Add task description...',
                 ),
               ),
               const SizedBox(height: 16),
+              const _Label('Category'),
               categoriesAsync.when(
                 loading: () => const LinearProgressIndicator(),
                 error: (_, _) => const Text('Could not load categories'),
@@ -165,10 +172,6 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
                   initialValue: categories.any((c) => c.id == _categoryId)
                       ? _categoryId
                       : null,
-                  decoration: const InputDecoration(
-                    labelText: 'Category',
-                    border: OutlineInputBorder(),
-                  ),
                   items: [
                     const DropdownMenuItem<String?>(
                       value: null,
@@ -184,108 +187,257 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<TaskPriority>(
-                initialValue: _priority,
-                decoration: const InputDecoration(
-                  labelText: 'Priority',
-                  border: OutlineInputBorder(),
-                ),
-                items: [
+              const _Label('Priority'),
+              Row(
+                children: [
                   for (final p in TaskPriority.values)
-                    DropdownMenuItem(value: p, child: Text(p.label)),
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          right: p == TaskPriority.low ? 0 : 8,
+                        ),
+                        child: _PriorityButton(
+                          priority: p,
+                          selected: _priority == p,
+                          onTap: () => setState(() => _priority = p),
+                        ),
+                      ),
+                    ),
                 ],
-                onChanged: (value) {
-                  if (value != null) setState(() => _priority = value);
-                },
               ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<TaskStatus>(
-                initialValue: _status,
-                decoration: const InputDecoration(
-                  labelText: 'Status',
-                  border: OutlineInputBorder(),
+              if (_isEditing) ...[
+                const SizedBox(height: 16),
+                const _Label('Status'),
+                DropdownButtonFormField<TaskStatus>(
+                  initialValue: _status,
+                  items: [
+                    for (final s in TaskStatus.values)
+                      DropdownMenuItem(value: s, child: Text(s.label)),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) setState(() => _status = value);
+                  },
                 ),
-                items: [
-                  for (final s in TaskStatus.values)
-                    DropdownMenuItem(value: s, child: Text(s.label)),
-                ],
-                onChanged: (value) {
-                  if (value != null) setState(() => _status = value);
-                },
-              ),
+              ],
               const SizedBox(height: 16),
-              InkWell(
+              const _Label('Deadline'),
+              _PickerField(
+                icon: Icons.calendar_today_outlined,
+                text: _deadline == null
+                    ? 'No deadline'
+                    : DateFormat('MMM d, y   h:mm a').format(_deadline!),
                 onTap: _pickDeadline,
-                child: InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: 'Deadline (optional)',
-                    border: const OutlineInputBorder(),
-                    suffixIcon: _deadline == null
-                        ? const Icon(Icons.calendar_today_outlined)
-                        : IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () => setState(() => _deadline = null),
-                          ),
-                  ),
-                  child: Text(
-                    _deadline == null
-                        ? 'No deadline'
-                        : DateFormat('EEE, d MMM yyyy • h:mm a')
-                            .format(_deadline!),
-                  ),
-                ),
+                onClear:
+                    _deadline == null ? null : () => setState(() => _deadline = null),
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _durationController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Estimated duration (minutes, optional)',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  final text = value?.trim() ?? '';
-                  if (text.isEmpty) return null;
-                  final number = int.tryParse(text);
-                  if (number == null || number <= 0) {
-                    return 'Enter a number greater than 0';
-                  }
-                  return null;
-                },
+              const _Label('Estimated Duration'),
+              _PickerField(
+                icon: Icons.access_time,
+                text: _durationMinutes == null
+                    ? 'Not set'
+                    : _formatDuration(_durationMinutes!),
+                onTap: _pickDuration,
+                onClear: _durationMinutes == null
+                    ? null
+                    : () => setState(() => _durationMinutes = null),
               ),
               const SizedBox(height: 16),
+              const _Label('Repeat'),
               DropdownButtonFormField<Recurrence>(
                 initialValue: _recurrence,
-                decoration: const InputDecoration(
-                  labelText: 'Repeat',
-                  border: OutlineInputBorder(),
-                ),
                 items: [
                   for (final r in Recurrence.values)
-                    DropdownMenuItem(value: r, child: Text(r.label)),
+                    DropdownMenuItem(
+                      value: r,
+                      child: Text(
+                          r == Recurrence.none ? 'Does not repeat' : r.label),
+                    ),
                 ],
                 onChanged: (value) {
                   if (value != null) setState(() => _recurrence = value);
                 },
               ),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _isSaving ? null : _save,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  child: _isSaving
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(_isEditing ? 'Save Changes' : 'Add Task'),
-                ),
+              const SizedBox(height: 28),
+              GradientButton(
+                label: _isEditing ? 'Save Changes' : 'Add Task',
+                isLoading: _isSaving,
+                onPressed: _save,
               ),
+              const SizedBox(height: 12),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  static String _formatDuration(int minutes) {
+    final h = minutes ~/ 60;
+    final m = minutes % 60;
+    if (h == 0) return '${m}m';
+    if (m == 0) return '${h}h';
+    return '${h}h ${m}m';
+  }
+}
+
+class _Label extends StatelessWidget {
+  const _Label(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
+    );
+  }
+}
+
+class _PriorityButton extends StatelessWidget {
+  const _PriorityButton({
+    required this.priority,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final TaskPriority priority;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = priority.color;
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: selected ? color.withValues(alpha: 0.12) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? color : AppColors.border,
+            width: selected ? 1.6 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.circle, size: 10, color: color),
+            const SizedBox(width: 6),
+            Text(
+              priority.label,
+              style: TextStyle(
+                color: selected ? color : AppColors.textMuted,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PickerField extends StatelessWidget {
+  const _PickerField({
+    required this.icon,
+    required this.text,
+    required this.onTap,
+    this.onClear,
+  });
+
+  final IconData icon;
+  final String text;
+  final VoidCallback onTap;
+  final VoidCallback? onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: AppColors.purple),
+            const SizedBox(width: 12),
+            Expanded(child: Text(text)),
+            if (onClear != null)
+              GestureDetector(
+                onTap: onClear,
+                child: const Icon(Icons.clear,
+                    size: 18, color: AppColors.textMuted),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DurationDialog extends StatefulWidget {
+  const _DurationDialog({required this.initialMinutes});
+
+  final int initialMinutes;
+
+  @override
+  State<_DurationDialog> createState() => _DurationDialogState();
+}
+
+class _DurationDialogState extends State<_DurationDialog> {
+  late int _hours = (widget.initialMinutes ~/ 60).clamp(0, 12);
+  late int _minutes = _snap(widget.initialMinutes % 60);
+
+  static int _snap(int m) => (m ~/ 5) * 5;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Estimated Duration'),
+      content: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          DropdownButton<int>(
+            value: _hours,
+            items: [
+              for (var h = 0; h <= 12; h++)
+                DropdownMenuItem(value: h, child: Text('$h h')),
+            ],
+            onChanged: (v) => setState(() => _hours = v ?? 0),
+          ),
+          const SizedBox(width: 24),
+          DropdownButton<int>(
+            value: _minutes,
+            items: [
+              for (var m = 0; m < 60; m += 5)
+                DropdownMenuItem(value: m, child: Text('$m min')),
+            ],
+            onChanged: (v) => setState(() => _minutes = v ?? 0),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            final total = _hours * 60 + _minutes;
+            Navigator.pop(context, total == 0 ? null : total);
+          },
+          child: const Text('OK'),
+        ),
+      ],
     );
   }
 }
