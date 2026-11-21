@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/widgets/placeholder_screen.dart';
+import '../calendar/presentation/calendar_screen.dart';
 import '../profile/profile_screen.dart';
 import '../tasks/presentation/task_form_screen.dart';
 import '../tasks/presentation/tasks_screen.dart';
@@ -18,8 +19,7 @@ class _MainShellState extends State<MainShell> {
   late final List<Widget> _pages = [
     const PlaceholderScreen(title: 'Home', icon: Icons.home_outlined),
     const _TasksPage(),
-    const PlaceholderScreen(
-        title: 'Calendar', icon: Icons.calendar_month_outlined),
+    const CalendarScreen(),
     const PlaceholderScreen(
         title: 'Planner', icon: Icons.checklist_rtl_outlined),
     const ProfileScreen(),
