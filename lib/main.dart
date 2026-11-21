@@ -5,7 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/constants/supabase_constants.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'features/auth/presentation/login_screen.dart';
-import 'features/home/home_screen.dart';
+import 'features/home/main_shell.dart';
 import 'core/theme/app_theme.dart';
 
 Future<void> main() async {
@@ -43,7 +43,7 @@ class AuthGate extends ConsumerWidget {
 
     return authState.when(
       data: (state) =>
-          state.session != null ? const HomeScreen() : const LoginScreen(),
+          state.session != null ? const MainShell() : const LoginScreen(),
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       ),
