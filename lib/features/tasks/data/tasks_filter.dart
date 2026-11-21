@@ -5,20 +5,53 @@ import '../domain/task_enums.dart';
 import 'tasks_providers.dart';
 
 class TasksFilter {
-  const TasksFilter({this.categoryId, this.priority, this.status});
+  const TasksFilter({
+    this.categoryId,
+    this.priority,
+    this.status,
+    this.query = '',
+  });
 
   final String? categoryId;
   final TaskPriority? priority;
   final TaskStatus? status;
+  final String query;
+
+  /// Active "advanced" filters (category/priority), not counting tabs/search.
+  bool get hasAdvancedFilters => categoryId != null || priority != null;
 
   bool get isActive =>
-      categoryId != null || priority != null || status != null;
+      categoryId != null ||
+      priority != null ||
+      status != null ||
+      query.isNotEmpty;
 
   bool matches(Task task) {
     if (categoryId != null && task.categoryId != categoryId) return false;
     if (priority != null && task.priority != priority) return false;
     if (status != null && task.status != status) return false;
+    if (query.isNotEmpty &&
+        !task.title.toLowerCase().contains(query.toLowerCase())) {
+      return false;
+    }
     return true;
+  }
+
+  TasksFilter copyWith({
+    String? categoryId,
+    bool clearCategory = false,
+    TaskPriority? priority,
+    bool clearPriority = false,
+    TaskStatus? status,
+    bool clearStatus = false,
+    String? query,
+  }) {
+    return TasksFilter(
+      categoryId: clearCategory ? null : (categoryId ?? this.categoryId),
+      priority: clearPriority ? null : (priority ?? this.priority),
+      status: clearStatus ? null : (status ?? this.status),
+      query: query ?? this.query,
+    );
   }
 }
 
@@ -26,23 +59,19 @@ class TasksFilterNotifier extends Notifier<TasksFilter> {
   @override
   TasksFilter build() => const TasksFilter();
 
-  void setCategory(String? id) => state = TasksFilter(
-        categoryId: id,
-        priority: state.priority,
-        status: state.status,
-      );
+  void setCategory(String? id) =>
+      state = state.copyWith(categoryId: id, clearCategory: id == null);
 
-  void setPriority(TaskPriority? p) => state = TasksFilter(
-        categoryId: state.categoryId,
-        priority: p,
-        status: state.status,
-      );
+  void setPriority(TaskPriority? p) =>
+      state = state.copyWith(priority: p, clearPriority: p == null);
 
-  void setStatus(TaskStatus? s) => state = TasksFilter(
-        categoryId: state.categoryId,
-        priority: state.priority,
-        status: s,
-      );
+  void setStatus(TaskStatus? s) =>
+      state = state.copyWith(status: s, clearStatus: s == null);
+
+  void setQuery(String q) => state = state.copyWith(query: q);
+
+  void clearAdvanced() => state =
+      state.copyWith(clearCategory: true, clearPriority: true);
 
   void clear() => state = const TasksFilter();
 }

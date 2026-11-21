@@ -65,6 +65,8 @@ class TasksScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tasksAsync = ref.watch(filteredTasksProvider);
     final filter = ref.watch(tasksFilterProvider);
+        final categories = ref.watch(categoriesProvider).value ?? [];
+    final categoryNames = {for (final c in categories) c.id: c.name};
 
     return tasksAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -118,6 +120,7 @@ class TasksScreen extends ConsumerWidget {
                             onStatusChanged: (status) =>
                                 _changeStatus(context, ref, task, status),
                             onDelete: () => _delete(context, ref, task),
+                            categoryName: categoryNames[task.categoryId],
                           );
                         },
                       ),
