@@ -6,9 +6,9 @@ import '../data/tasks_providers.dart';
 import '../data/tasks_repository.dart';
 import '../domain/task.dart';
 import '../domain/task_enums.dart';
-import 'task_form_screen.dart';
 import 'widgets/filter_bar.dart';
 import 'widgets/task_card.dart';
+import 'task_details_screen.dart';
 
 class TasksScreen extends ConsumerWidget {
   const TasksScreen({super.key});
@@ -114,7 +114,8 @@ class TasksScreen extends ConsumerWidget {
                             task: task,
                             onTap: () => Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (_) => TaskFormScreen(task: task),
+                                builder: (_) =>
+                                    TaskDetailsScreen(taskId: task.id),
                               ),
                             ),
                             onStatusChanged: (status) =>
