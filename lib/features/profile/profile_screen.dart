@@ -27,8 +27,7 @@ class ProfileScreen extends ConsumerWidget {
           Card(
             child: ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Log out',
-                  style: TextStyle(color: Colors.red)),
+              title: const Text('Log out', style: TextStyle(color: Colors.red)),
               onTap: () => ref.read(authRepositoryProvider).signOut(),
             ),
           ),

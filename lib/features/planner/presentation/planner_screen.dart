@@ -118,8 +118,10 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                Text('${progress.percentage.round()}%',
-                    style: const TextStyle(fontWeight: FontWeight.w700)),
+                Text(
+                  '${progress.percentage.round()}%',
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
               ],
             ),
           ),
@@ -129,13 +131,17 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
               entries: entries,
               onTap: (entry) {
                 if (entry.event != null) {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => EventFormScreen(event: entry.event),
-                  ));
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => EventFormScreen(event: entry.event),
+                    ),
+                  );
                 } else {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => TaskDetailsScreen(taskId: entry.task!.id),
-                  ));
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => TaskDetailsScreen(taskId: entry.task!.id),
+                    ),
+                  );
                 }
               },
             ),
@@ -148,20 +154,20 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
 
 class _PlannerEntry {
   _PlannerEntry.event(Event e)
-      : event = e,
-        task = null,
-        title = e.title,
-        start = e.startTime,
-        end = e.endTime,
-        color = colorFromHex(e.color);
+    : event = e,
+      task = null,
+      title = e.title,
+      start = e.startTime,
+      end = e.endTime,
+      color = colorFromHex(e.color);
 
   _PlannerEntry.task(Task t)
-      : task = t,
-        event = null,
-        title = t.title,
-        start = t.startTime!,
-        end = t.endTime!,
-        color = t.priority.color;
+    : task = t,
+      event = null,
+      title = t.title,
+      start = t.startTime!,
+      end = t.endTime!,
+      color = t.priority.color;
 
   final Event? event;
   final Task? task;
@@ -190,15 +196,19 @@ class _StatBox extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(label,
-                style: const TextStyle(
-                    fontSize: 11, color: AppColors.textMuted)),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+            ),
             const SizedBox(height: 2),
-            Text('$value',
-                style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: color)),
+            Text(
+              '$value',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
           ],
         ),
       ),
@@ -247,7 +257,9 @@ class _Timeline extends StatelessWidget {
                         child: Text(
                           hourFormat.format(DateTime(2000, 1, 1, h)),
                           style: const TextStyle(
-                              fontSize: 11, color: AppColors.textMuted),
+                            fontSize: 11,
+                            color: AppColors.textMuted,
+                          ),
                         ),
                       ),
                     ),
@@ -266,7 +278,9 @@ class _Timeline extends StatelessWidget {
                   onTap: () => onTap(e),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: e.color.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
@@ -282,14 +296,18 @@ class _Timeline extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                              fontWeight: FontWeight.w600, fontSize: 13),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
                         ),
                         Text(
                           '${timeFormat.format(e.start)} - ${timeFormat.format(e.end)}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                              fontSize: 11, color: AppColors.textMuted),
+                            fontSize: 11,
+                            color: AppColors.textMuted,
+                          ),
                         ),
                       ],
                     ),

@@ -66,8 +66,11 @@ class TaskCard extends StatelessWidget {
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.circle,
-                                    size: 8, color: priorityColor),
+                                Icon(
+                                  Icons.circle,
+                                  size: 8,
+                                  color: priorityColor,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   task.priority.label,
@@ -152,8 +155,11 @@ class TaskCard extends StatelessWidget {
                   ),
                 ),
                 PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert,
-                      size: 20, color: AppColors.textMuted),
+                  icon: const Icon(
+                    Icons.more_vert,
+                    size: 20,
+                    color: AppColors.textMuted,
+                  ),
                   onSelected: (value) {
                     if (value == 'delete') {
                       onDelete();
@@ -170,8 +176,10 @@ class TaskCard extends StatelessWidget {
                     const PopupMenuDivider(),
                     const PopupMenuItem(
                       value: 'delete',
-                      child: Text('Delete',
-                          style: TextStyle(color: Colors.red)),
+                      child: Text(
+                        'Delete',
+                        style: TextStyle(color: Colors.red),
+                      ),
                     ),
                   ],
                 ),

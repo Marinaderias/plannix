@@ -49,22 +49,22 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   List<_Entry> _entriesFor(List<_Entry> all, DateTime day) {
-    final list = all
-        .where((e) => isSameDay(e.item.start, day))
-        .toList()
+    final list = all.where((e) => isSameDay(e.item.start, day)).toList()
       ..sort((a, b) => a.item.start.compareTo(b.item.start));
     return list;
   }
 
   void _openEntry(_Entry entry) {
     if (entry.event != null) {
-      Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => EventFormScreen(event: entry.event),
-      ));
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => EventFormScreen(event: entry.event)),
+      );
     } else if (entry.task != null) {
-      Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => TaskDetailsScreen(taskId: entry.task!.id),
-      ));
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => TaskDetailsScreen(taskId: entry.task!.id),
+        ),
+      );
     }
   }
 
@@ -84,10 +84,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       ),
       body: Column(
         children: [
-          _ModeSwitch(
-            mode: _mode,
-            onChanged: (m) => setState(() => _mode = m),
-          ),
+          _ModeSwitch(mode: _mode, onChanged: (m) => setState(() => _mode = m)),
           if (_mode != CalendarMode.day)
             TableCalendar<_Entry>(
               firstDay: DateTime(2020),
@@ -129,10 +126,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           else
             _DayHeader(
               day: _selected,
-              onPrev: () => setState(() =>
-                  _selected = _selected.subtract(const Duration(days: 1))),
+              onPrev: () => setState(
+                () => _selected = _selected.subtract(const Duration(days: 1)),
+              ),
               onNext: () => setState(
-                  () => _selected = _selected.add(const Duration(days: 1))),
+                () => _selected = _selected.add(const Duration(days: 1)),
+              ),
             ),
           const Divider(height: 1),
           Padding(
@@ -142,7 +141,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               child: Text(
                 DateFormat('EEEE, MMMM d').format(_selected),
                 style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.w700),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
@@ -219,8 +220,10 @@ class _EntriesList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (entries.isEmpty) {
       return const Center(
-        child: Text('Nothing scheduled for this day',
-            style: TextStyle(color: AppColors.textMuted)),
+        child: Text(
+          'Nothing scheduled for this day',
+          style: TextStyle(color: AppColors.textMuted),
+        ),
       );
     }
 
@@ -241,14 +244,15 @@ class _EntriesList extends StatelessWidget {
           child: ListTile(
             onTap: () => onTap(entry),
             leading: CircleAvatar(radius: 6, backgroundColor: color),
-            title: Text(entry.item.title,
-                style: const TextStyle(fontWeight: FontWeight.w600)),
+            title: Text(
+              entry.item.title,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
             subtitle: Text(
               '${timeFormat.format(entry.item.start)} - ${timeFormat.format(entry.item.end)}',
             ),
             trailing: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
@@ -256,7 +260,10 @@ class _EntriesList extends StatelessWidget {
               child: Text(
                 isEvent ? 'Event' : 'Task',
                 style: TextStyle(
-                    color: color, fontSize: 12, fontWeight: FontWeight.w600),
+                  color: color,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),

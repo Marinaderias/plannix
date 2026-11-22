@@ -33,7 +33,8 @@ class TasksRepository {
   Future<void> updateStatus(String taskId, TaskStatus status) async {
     await _client
         .from('tasks')
-        .update({'status': status.value}).eq('id', taskId);
+        .update({'status': status.value})
+        .eq('id', taskId);
   }
 
   Future<void> deleteTask(String taskId) async {
@@ -71,23 +72,27 @@ class TasksRepository {
   Future<void> setSubtaskCompleted(String subtaskId, bool completed) async {
     await _client
         .from('subtasks')
-        .update({'is_completed': completed}).eq('id', subtaskId);
+        .update({'is_completed': completed})
+        .eq('id', subtaskId);
   }
 
   Future<void> deleteSubtask(String subtaskId) async {
     await _client.from('subtasks').delete().eq('id', subtaskId);
   }
 
-    /// Sets (or clears, when both are null) the scheduled time of a task.
+  /// Sets (or clears, when both are null) the scheduled time of a task.
   Future<void> scheduleTask(
     String taskId, {
     required DateTime? start,
     required DateTime? end,
   }) async {
-    await _client.from('tasks').update({
-      'start_time': start?.toUtc().toIso8601String(),
-      'end_time': end?.toUtc().toIso8601String(),
-    }).eq('id', taskId);
+    await _client
+        .from('tasks')
+        .update({
+          'start_time': start?.toUtc().toIso8601String(),
+          'end_time': end?.toUtc().toIso8601String(),
+        })
+        .eq('id', taskId);
   }
 }
 

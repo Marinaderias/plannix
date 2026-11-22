@@ -61,8 +61,12 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       _end = event.endTime;
     } else {
       final base = widget.initialDate ?? DateTime.now();
-      final nextHour = DateTime(base.year, base.month, base.day,
-          DateTime.now().hour + 1);
+      final nextHour = DateTime(
+        base.year,
+        base.month,
+        base.day,
+        DateTime.now().hour + 1,
+      );
       _start = nextHour;
       _end = nextHour.add(const Duration(hours: 1));
     }
@@ -90,11 +94,21 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       if (isStart) {
         final duration = _end.difference(_start);
         _start = DateTime(
-            date.year, date.month, date.day, _start.hour, _start.minute);
+          date.year,
+          date.month,
+          date.day,
+          _start.hour,
+          _start.minute,
+        );
         _end = _start.add(duration);
       } else {
         _end = DateTime(
-            date.year, date.month, date.day, _end.hour, _end.minute);
+          date.year,
+          date.month,
+          date.day,
+          _end.hour,
+          _end.minute,
+        );
       }
     });
   }
@@ -111,11 +125,21 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       if (isStart) {
         final duration = _end.difference(_start);
         _start = DateTime(
-            _start.year, _start.month, _start.day, time.hour, time.minute);
+          _start.year,
+          _start.month,
+          _start.day,
+          time.hour,
+          time.minute,
+        );
         _end = _start.add(duration);
       } else {
         _end = DateTime(
-            _end.year, _end.month, _end.day, time.hour, time.minute);
+          _end.year,
+          _end.month,
+          _end.day,
+          time.hour,
+          time.minute,
+        );
       }
     });
   }
@@ -284,7 +308,9 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
               TextFormField(
                 controller: _titleController,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(hintText: 'e.g. Team Meeting'),
+                decoration: const InputDecoration(
+                  hintText: 'e.g. Team Meeting',
+                ),
                 validator: (value) => (value == null || value.trim().isEmpty)
                     ? 'Please enter a title'
                     : null,
@@ -294,8 +320,9 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
               TextFormField(
                 controller: _locationController,
                 textCapitalization: TextCapitalization.sentences,
-                decoration:
-                    const InputDecoration(hintText: 'e.g. Office / Zoom'),
+                decoration: const InputDecoration(
+                  hintText: 'e.g. Office / Zoom',
+                ),
               ),
               const SizedBox(height: 16),
               Row(
@@ -357,12 +384,17 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                           shape: BoxShape.circle,
                           border: _color == hex
                               ? Border.all(
-                                  color: AppColors.textDark, width: 2.5)
+                                  color: AppColors.textDark,
+                                  width: 2.5,
+                                )
                               : null,
                         ),
                         child: _color == hex
-                            ? const Icon(Icons.check,
-                                color: Colors.white, size: 18)
+                            ? const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 18,
+                              )
                             : null,
                       ),
                     ),
@@ -428,9 +460,7 @@ class _Field extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Expanded(
-                  child: Text(text, overflow: TextOverflow.ellipsis),
-                ),
+                Expanded(child: Text(text, overflow: TextOverflow.ellipsis)),
                 Icon(icon, size: 18, color: AppColors.purple),
               ],
             ),

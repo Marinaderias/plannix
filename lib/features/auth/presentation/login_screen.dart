@@ -32,7 +32,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     setState(() => _isLoading = true);
     try {
-      await ref.read(authRepositoryProvider).signIn(
+      await ref
+          .read(authRepositoryProvider)
+          .signIn(
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
@@ -69,8 +71,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: ShaderMask(
                       shaderCallback: (rect) =>
                           AppColors.gradient.createShader(rect),
-                      child: const Icon(Icons.all_inclusive,
-                          size: 88, color: Colors.white),
+                      child: const Icon(
+                        Icons.all_inclusive,
+                        size: 88,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -104,8 +109,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     style: TextStyle(color: AppColors.textMuted),
                   ),
                   const SizedBox(height: 28),
-                  const Text('Email',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  const Text(
+                    'Email',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _emailController,
@@ -125,8 +132,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  const Text('Password',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  const Text(
+                    'Password',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _passwordController,
@@ -135,11 +144,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       hintText: '••••••••',
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined),
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                        ),
                         onPressed: () => setState(
-                            () => _obscurePassword = !_obscurePassword),
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                       ),
                     ),
                     validator: (value) {
@@ -159,16 +171,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Don't have an account? ",
-                          style: TextStyle(color: AppColors.textMuted)),
+                      const Text(
+                        "Don't have an account? ",
+                        style: TextStyle(color: AppColors.textMuted),
+                      ),
                       GestureDetector(
                         onTap: _isLoading
                             ? null
                             : () => Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => const SignupScreen(),
-                                  ),
+                                MaterialPageRoute(
+                                  builder: (_) => const SignupScreen(),
                                 ),
+                              ),
                         child: const Text(
                           'Sign up',
                           style: TextStyle(

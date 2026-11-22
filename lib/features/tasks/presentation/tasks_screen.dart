@@ -65,7 +65,7 @@ class TasksScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tasksAsync = ref.watch(filteredTasksProvider);
     final filter = ref.watch(tasksFilterProvider);
-        final categories = ref.watch(categoriesProvider).value ?? [];
+    final categories = ref.watch(categoriesProvider).value ?? [];
     final categoryNames = {for (final c in categories) c.id: c.name};
 
     return tasksAsync.when(

@@ -7,6 +7,9 @@ import '../data/tasks_providers.dart';
 import '../data/tasks_repository.dart';
 import '../domain/task.dart';
 import '../domain/task_enums.dart';
+import '../../../core/scheduling/scheduled_item.dart';
+import '../../../core/scheduling/scheduling_service.dart';
+import '../../events/data/events_repository.dart';
 
 class TaskFormScreen extends ConsumerStatefulWidget {
   const TaskFormScreen({super.key, this.task});
@@ -29,6 +32,7 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
   late Recurrence _recurrence;
   DateTime? _deadline;
   int? _durationMinutes;
+  DateTime? _scheduledStart;
   bool _isSaving = false;
 
   bool get _isEditing => widget.task != null;
@@ -38,14 +42,16 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
     super.initState();
     final task = widget.task;
     _titleController = TextEditingController(text: task?.title ?? '');
-    _descriptionController =
-        TextEditingController(text: task?.description ?? '');
+    _descriptionController = TextEditingController(
+      text: task?.description ?? '',
+    );
     _categoryId = task?.categoryId;
     _priority = task?.priority ?? TaskPriority.medium;
     _status = task?.status ?? TaskStatus.pending;
     _recurrence = task?.recurrence ?? Recurrence.none;
     _deadline = task?.deadline;
     _durationMinutes = task?.estimatedDurationMinutes;
+    _scheduledStart = task?.startTime;
   }
 
   @override
@@ -74,9 +80,86 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
     if (time == null) return;
 
     setState(() {
-      _deadline =
+      _deadline = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
+    });
+  }
+
+    Future<void> _pickScheduledStart() async {
+    final now = DateTime.now();
+    final initial = _scheduledStart ?? now;
+
+    final date = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 5),
+    );
+    if (date == null || !mounted) return;
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(initial),
+    );
+    if (time == null) return;
+
+    setState(() {
+      _scheduledStart =
           DateTime(date.year, date.month, date.day, time.hour, time.minute);
     });
+  }
+
+  DateTime? get _scheduledEnd => _scheduledStart?.add(
+        Duration(minutes: _durationMinutes ?? 60),
+      );
+
+  /// Returns true if the user wants to continue saving.
+  Future<bool> _confirmConflicts() async {
+    final start = _scheduledStart;
+    final end = _scheduledEnd;
+    if (start == null || end == null) return true;
+
+    final events = ref.read(eventsProvider).value ?? [];
+    final tasks = ref.read(tasksProvider).value ?? [];
+    final items = <ScheduledItem>[
+      for (final e in events) ScheduledItem.fromEvent(e),
+      for (final t in tasks)
+        if (ScheduledItem.fromTask(t) != null) ScheduledItem.fromTask(t)!,
+    ];
+
+    final conflicts = SchedulingService.findConflicts(
+      start: start,
+      end: end,
+      items: items,
+      excludeId: widget.task?.id,
+    );
+    if (conflicts.isEmpty) return true;
+
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Scheduling conflict'),
+        content: Text(
+          'This overlaps with: ${conflicts.map((c) => c.title).join(', ')}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Save anyway'),
+          ),
+        ],
+      ),
+    );
+    return proceed == true;
   }
 
   Future<void> _pickDuration() async {
@@ -91,6 +174,9 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
+    if (!await _confirmConflicts()) return;
+    if (!mounted) return;
+
     final description = _descriptionController.text.trim();
 
     final task = Task(
@@ -102,9 +188,8 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
       status: _status,
       deadline: _deadline,
       estimatedDurationMinutes: _durationMinutes,
-      // Keep the scheduled time if the task already has one.
-      startTime: widget.task?.startTime,
-      endTime: widget.task?.endTime,
+      startTime: _scheduledStart,
+      endTime: _scheduledEnd,
       recurrence: _recurrence,
     );
 
@@ -227,8 +312,9 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
                     ? 'No deadline'
                     : DateFormat('MMM d, y   h:mm a').format(_deadline!),
                 onTap: _pickDeadline,
-                onClear:
-                    _deadline == null ? null : () => setState(() => _deadline = null),
+                onClear: _deadline == null
+                    ? null
+                    : () => setState(() => _deadline = null),
               ),
               const SizedBox(height: 16),
               const _Label('Estimated Duration'),
@@ -243,6 +329,18 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
                     : () => setState(() => _durationMinutes = null),
               ),
               const SizedBox(height: 16),
+              const _Label('Schedule (optional)'),
+              _PickerField(
+                icon: Icons.event_available_outlined,
+                text: _scheduledStart == null
+                    ? 'Not scheduled'
+                    : '${DateFormat('MMM d, h:mm a').format(_scheduledStart!)} - ${DateFormat('h:mm a').format(_scheduledEnd!)}',
+                onTap: _pickScheduledStart,
+                onClear: _scheduledStart == null
+                    ? null
+                    : () => setState(() => _scheduledStart = null),
+              ),
+              const SizedBox(height: 16),
               const _Label('Repeat'),
               DropdownButtonFormField<Recurrence>(
                 initialValue: _recurrence,
@@ -251,7 +349,8 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
                     DropdownMenuItem(
                       value: r,
                       child: Text(
-                          r == Recurrence.none ? 'Does not repeat' : r.label),
+                        r == Recurrence.none ? 'Does not repeat' : r.label,
+                      ),
                     ),
                 ],
                 onChanged: (value) {
@@ -374,8 +473,11 @@ class _PickerField extends StatelessWidget {
             if (onClear != null)
               GestureDetector(
                 onTap: onClear,
-                child: const Icon(Icons.clear,
-                    size: 18, color: AppColors.textMuted),
+                child: const Icon(
+                  Icons.clear,
+                  size: 18,
+                  color: AppColors.textMuted,
+                ),
               ),
           ],
         ),

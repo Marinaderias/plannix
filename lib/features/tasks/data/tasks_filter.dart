@@ -70,15 +70,15 @@ class TasksFilterNotifier extends Notifier<TasksFilter> {
 
   void setQuery(String q) => state = state.copyWith(query: q);
 
-  void clearAdvanced() => state =
-      state.copyWith(clearCategory: true, clearPriority: true);
+  void clearAdvanced() =>
+      state = state.copyWith(clearCategory: true, clearPriority: true);
 
   void clear() => state = const TasksFilter();
 }
 
-final tasksFilterProvider =
-    NotifierProvider<TasksFilterNotifier, TasksFilter>(
-        TasksFilterNotifier.new);
+final tasksFilterProvider = NotifierProvider<TasksFilterNotifier, TasksFilter>(
+  TasksFilterNotifier.new,
+);
 
 /// Tasks after applying the current filter.
 final filteredTasksProvider = Provider<AsyncValue<List<Task>>>((ref) {

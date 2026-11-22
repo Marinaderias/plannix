@@ -133,8 +133,10 @@ class _FilterSheet extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Category',
-                style: TextStyle(fontWeight: FontWeight.w700)),
+            const Text(
+              'Category',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -149,8 +151,10 @@ class _FilterSheet extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 16),
-            const Text('Priority',
-                style: TextStyle(fontWeight: FontWeight.w700)),
+            const Text(
+              'Priority',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -159,8 +163,7 @@ class _FilterSheet extends ConsumerWidget {
                   ChoiceChip(
                     label: Text(p.label),
                     selected: filter.priority == p,
-                    onSelected: (sel) =>
-                        notifier.setPriority(sel ? p : null),
+                    onSelected: (sel) => notifier.setPriority(sel ? p : null),
                   ),
               ],
             ),

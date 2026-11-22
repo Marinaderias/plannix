@@ -14,7 +14,9 @@ final categoriesProvider = FutureProvider<List<Category>>((ref) {
 });
 
 /// Subtasks of one task.
-final subtasksProvider =
-    FutureProvider.family<List<Subtask>, String>((ref, taskId) {
+final subtasksProvider = FutureProvider.family<List<Subtask>, String>((
+  ref,
+  taskId,
+) {
   return ref.watch(tasksRepositoryProvider).fetchSubtasks(taskId);
 });

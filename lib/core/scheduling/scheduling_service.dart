@@ -63,24 +63,29 @@ class SchedulingService {
     if (!dayEnd.isAfter(dayStart)) return [];
 
     // Keep only items that touch the window, clipped to it, sorted by start.
-    final busy = items
-        .where((i) => overlaps(dayStart, dayEnd, i.start, i.end))
-        .map((i) => TimeSlot(
-              i.start.isBefore(dayStart) ? dayStart : i.start,
-              i.end.isAfter(dayEnd) ? dayEnd : i.end,
-            ))
-        .toList()
-      ..sort((a, b) => a.start.compareTo(b.start));
+    final busy =
+        items
+            .where((i) => overlaps(dayStart, dayEnd, i.start, i.end))
+            .map(
+              (i) => TimeSlot(
+                i.start.isBefore(dayStart) ? dayStart : i.start,
+                i.end.isAfter(dayEnd) ? dayEnd : i.end,
+              ),
+            )
+            .toList()
+          ..sort((a, b) => a.start.compareTo(b.start));
 
     // Merge overlapping or touching busy ranges.
     final merged = <TimeSlot>[];
     for (final slot in busy) {
       if (merged.isNotEmpty && !slot.start.isAfter(merged.last.end)) {
         final last = merged.removeLast();
-        merged.add(TimeSlot(
-          last.start,
-          slot.end.isAfter(last.end) ? slot.end : last.end,
-        ));
+        merged.add(
+          TimeSlot(
+            last.start,
+            slot.end.isAfter(last.end) ? slot.end : last.end,
+          ),
+        );
       } else {
         merged.add(slot);
       }
