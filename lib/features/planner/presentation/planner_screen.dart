@@ -11,6 +11,7 @@ import '../../events/presentation/event_form_screen.dart';
 import '../../tasks/data/tasks_providers.dart';
 import '../../tasks/domain/task.dart';
 import '../../tasks/presentation/task_details_screen.dart';
+import 'available_time_screen.dart';
 
 const double _hourHeight = 64;
 const int _firstHour = 8;
@@ -89,6 +90,15 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                 icon: const Icon(Icons.chevron_right),
                 onPressed: () => _shift(1),
               ),
+                        IconButton(
+            icon: const Icon(Icons.timelapse),
+            tooltip: 'Available time',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => AvailableTimeScreen(initialDay: _day),
+              ),
+            ),
+          ),
             ],
           ),
           Padding(
