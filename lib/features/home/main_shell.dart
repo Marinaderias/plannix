@@ -5,6 +5,7 @@ import '../calendar/presentation/calendar_screen.dart';
 import '../profile/profile_screen.dart';
 import '../tasks/presentation/task_form_screen.dart';
 import '../tasks/presentation/tasks_screen.dart';
+import '../planner/presentation/planner_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -20,8 +21,7 @@ class _MainShellState extends State<MainShell> {
     const PlaceholderScreen(title: 'Home', icon: Icons.home_outlined),
     const _TasksPage(),
     const CalendarScreen(),
-    const PlaceholderScreen(
-        title: 'Planner', icon: Icons.checklist_rtl_outlined),
+    const PlannerScreen(),
     const ProfileScreen(),
   ];
 
