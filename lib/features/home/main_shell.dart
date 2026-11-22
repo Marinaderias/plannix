@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../core/widgets/placeholder_screen.dart';
 import '../calendar/presentation/calendar_screen.dart';
 import '../profile/profile_screen.dart';
 import '../tasks/presentation/task_form_screen.dart';
 import '../tasks/presentation/tasks_screen.dart';
 import '../planner/presentation/planner_screen.dart';
+import 'home_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -18,7 +18,7 @@ class _MainShellState extends State<MainShell> {
   int _index = 0;
 
   late final List<Widget> _pages = [
-    const PlaceholderScreen(title: 'Home', icon: Icons.home_outlined),
+    const HomeScreen(),
     const _TasksPage(),
     const CalendarScreen(),
     const PlannerScreen(),
