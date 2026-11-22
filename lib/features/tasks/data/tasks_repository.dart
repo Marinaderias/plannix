@@ -77,6 +77,18 @@ class TasksRepository {
   Future<void> deleteSubtask(String subtaskId) async {
     await _client.from('subtasks').delete().eq('id', subtaskId);
   }
+
+    /// Sets (or clears, when both are null) the scheduled time of a task.
+  Future<void> scheduleTask(
+    String taskId, {
+    required DateTime? start,
+    required DateTime? end,
+  }) async {
+    await _client.from('tasks').update({
+      'start_time': start?.toUtc().toIso8601String(),
+      'end_time': end?.toUtc().toIso8601String(),
+    }).eq('id', taskId);
+  }
 }
 
 final tasksRepositoryProvider = Provider<TasksRepository>((ref) {
