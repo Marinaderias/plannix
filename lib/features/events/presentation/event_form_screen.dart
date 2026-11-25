@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 
 import '../../../core/scheduling/scheduled_item.dart';
 import '../../../core/scheduling/scheduling_service.dart';
+import '../../../core/services/notification_service.dart';
+import '../../../core/services/reminder_options.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../tasks/data/tasks_providers.dart';
 import '../data/events_repository.dart';
@@ -45,6 +47,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
   late DateTime _start;
   late DateTime _end;
   late String _color;
+  int? _reminder;
   bool _isSaving = false;
 
   bool get _isEditing => widget.event != null;
@@ -71,6 +74,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       _end = nextHour.add(const Duration(hours: 1));
     }
     _color = event?.color ?? _eventColors.first;
+    _reminder = event?.reminderMinutes;
   }
 
   @override
@@ -102,13 +106,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
         );
         _end = _start.add(duration);
       } else {
-        _end = DateTime(
-          date.year,
-          date.month,
-          date.day,
-          _end.hour,
-          _end.minute,
-        );
+        _end = DateTime(date.year, date.month, date.day, _end.hour, _end.minute);
       }
     });
   }
@@ -133,13 +131,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
         );
         _end = _start.add(duration);
       } else {
-        _end = DateTime(
-          _end.year,
-          _end.month,
-          _end.day,
-          time.hour,
-          time.minute,
-        );
+        _end = DateTime(_end.year, _end.month, _end.day, time.hour, time.minute);
       }
     });
   }
@@ -223,16 +215,29 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       color: _color,
       startTime: _start,
       endTime: _end,
+      reminderMinutes: _reminder,
     );
 
     setState(() => _isSaving = true);
     try {
       final repo = ref.read(eventsRepositoryProvider);
+      String id = event.id;
       if (_isEditing) {
         await repo.updateEvent(event);
       } else {
-        await repo.addEvent(event);
+        id = await repo.addEvent(event);
       }
+
+      await NotificationService.cancel('event_$id');
+      if (_reminder != null) {
+        await NotificationService.schedule(
+          key: 'event_$id',
+          title: event.title,
+          body: 'Starts at ${DateFormat('h:mm a').format(event.startTime)}',
+          at: event.startTime.subtract(Duration(minutes: _reminder!)),
+        );
+      }
+
       ref.invalidate(eventsProvider);
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
@@ -269,6 +274,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
 
     try {
       await ref.read(eventsRepositoryProvider).deleteEvent(widget.event!.id);
+      await NotificationService.cancel('event_${widget.event!.id}');
       ref.invalidate(eventsProvider);
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
@@ -308,9 +314,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
               TextFormField(
                 controller: _titleController,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  hintText: 'e.g. Team Meeting',
-                ),
+                decoration: const InputDecoration(hintText: 'e.g. Team Meeting'),
                 validator: (value) => (value == null || value.trim().isEmpty)
                     ? 'Please enter a title'
                     : null,
@@ -320,9 +324,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
               TextFormField(
                 controller: _locationController,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  hintText: 'e.g. Office / Zoom',
-                ),
+                decoration: const InputDecoration(hintText: 'e.g. Office / Zoom'),
               ),
               const SizedBox(height: 16),
               Row(
@@ -369,6 +371,16 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                 ],
               ),
               const SizedBox(height: 16),
+              const _Label('Reminder'),
+              DropdownButtonFormField<int?>(
+                initialValue: _reminder,
+                items: [
+                  for (final e in reminderOptions.entries)
+                    DropdownMenuItem<int?>(value: e.key, child: Text(e.value)),
+                ],
+                onChanged: (v) => setState(() => _reminder = v),
+              ),
+              const SizedBox(height: 16),
               const _Label('Color'),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -383,18 +395,11 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                           color: colorFromHex(hex),
                           shape: BoxShape.circle,
                           border: _color == hex
-                              ? Border.all(
-                                  color: AppColors.textDark,
-                                  width: 2.5,
-                                )
+                              ? Border.all(color: AppColors.textDark, width: 2.5)
                               : null,
                         ),
                         child: _color == hex
-                            ? const Icon(
-                                Icons.check,
-                                color: Colors.white,
-                                size: 18,
-                              )
+                            ? const Icon(Icons.check, color: Colors.white, size: 18)
                             : null,
                       ),
                     ),
