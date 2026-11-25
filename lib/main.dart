@@ -7,6 +7,7 @@ import 'features/auth/data/auth_repository.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/home/main_shell.dart';
 import 'core/theme/app_theme.dart';
+import 'core/services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,9 +16,12 @@ Future<void> main() async {
     url: SupabaseConstants.url,
     publishableKey: SupabaseConstants.publishableKey,
   );
+    await NotificationService.init();
 
   runApp(const ProviderScope(child: PlannixApp()));
 }
+
+
 
 class PlannixApp extends StatelessWidget {
   const PlannixApp({super.key});

@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/scheduling/scheduled_item.dart';
+import '../../../core/scheduling/scheduling_service.dart';
+import '../../../core/services/notification_service.dart';
+import '../../../core/services/reminder_options.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../events/data/events_repository.dart';
 import '../data/tasks_providers.dart';
 import '../data/tasks_repository.dart';
 import '../domain/task.dart';
 import '../domain/task_enums.dart';
-import '../../../core/scheduling/scheduled_item.dart';
-import '../../../core/scheduling/scheduling_service.dart';
-import '../../events/data/events_repository.dart';
 
 class TaskFormScreen extends ConsumerStatefulWidget {
   const TaskFormScreen({super.key, this.task});
@@ -33,6 +35,7 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
   DateTime? _deadline;
   int? _durationMinutes;
   DateTime? _scheduledStart;
+  int? _reminder;
   bool _isSaving = false;
 
   bool get _isEditing => widget.task != null;
@@ -52,6 +55,7 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
     _deadline = task?.deadline;
     _durationMinutes = task?.estimatedDurationMinutes;
     _scheduledStart = task?.startTime;
+    _reminder = task?.reminderMinutes;
   }
 
   @override
@@ -90,7 +94,7 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
     });
   }
 
-    Future<void> _pickScheduledStart() async {
+  Future<void> _pickScheduledStart() async {
     final now = DateTime.now();
     final initial = _scheduledStart ?? now;
 
@@ -109,8 +113,13 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
     if (time == null) return;
 
     setState(() {
-      _scheduledStart =
-          DateTime(date.year, date.month, date.day, time.hour, time.minute);
+      _scheduledStart = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
     });
   }
 
@@ -191,16 +200,32 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
       startTime: _scheduledStart,
       endTime: _scheduledEnd,
       recurrence: _recurrence,
+      reminderMinutes: _reminder,
     );
 
     setState(() => _isSaving = true);
     try {
       final repo = ref.read(tasksRepositoryProvider);
+      String id = task.id;
       if (_isEditing) {
         await repo.updateTask(task);
       } else {
-        await repo.addTask(task);
+        id = await repo.addTask(task);
       }
+
+      await NotificationService.cancel('task_$id');
+      final base = _scheduledStart ?? _deadline;
+      if (_reminder != null && base != null) {
+        await NotificationService.schedule(
+          key: 'task_$id',
+          title: task.title,
+          body: _scheduledStart != null
+              ? 'Time to start'
+              : 'Deadline approaching',
+          at: base.subtract(Duration(minutes: _reminder!)),
+        );
+      }
+
       ref.invalidate(tasksProvider);
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
@@ -339,6 +364,16 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
                 onClear: _scheduledStart == null
                     ? null
                     : () => setState(() => _scheduledStart = null),
+              ),
+              const SizedBox(height: 16),
+              const _Label('Reminder'),
+              DropdownButtonFormField<int?>(
+                initialValue: _reminder,
+                items: [
+                  for (final e in reminderOptions.entries)
+                    DropdownMenuItem<int?>(value: e.key, child: Text(e.value)),
+                ],
+                onChanged: (v) => setState(() => _reminder = v),
               ),
               const SizedBox(height: 16),
               const _Label('Repeat'),

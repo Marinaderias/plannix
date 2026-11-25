@@ -14,8 +14,13 @@ class EventsRepository {
     return data.map<Event>((row) => Event.fromMap(row)).toList();
   }
 
-  Future<void> addEvent(Event event) async {
-    await _client.from('events').insert(event.toMap());
+  Future<String> addEvent(Event event) async {
+    final row = await _client
+        .from('events')
+        .insert(event.toMap())
+        .select('id')
+        .single();
+    return row['id'] as String;
   }
 
   Future<void> updateEvent(Event event) async {

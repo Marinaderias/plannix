@@ -22,8 +22,10 @@ class TasksRepository {
     return data.map<Task>((row) => Task.fromMap(row)).toList();
   }
 
-  Future<void> addTask(Task task) async {
-    await _client.from('tasks').insert(task.toMap());
+  Future<String> addTask(Task task) async {
+    final row =
+        await _client.from('tasks').insert(task.toMap()).select('id').single();
+    return row['id'] as String;
   }
 
   Future<void> updateTask(Task task) async {
@@ -33,12 +35,23 @@ class TasksRepository {
   Future<void> updateStatus(String taskId, TaskStatus status) async {
     await _client
         .from('tasks')
-        .update({'status': status.value})
-        .eq('id', taskId);
+        .update({'status': status.value}).eq('id', taskId);
   }
 
   Future<void> deleteTask(String taskId) async {
     await _client.from('tasks').delete().eq('id', taskId);
+  }
+
+  /// Sets (or clears, when both are null) the scheduled time of a task.
+  Future<void> scheduleTask(
+    String taskId, {
+    required DateTime? start,
+    required DateTime? end,
+  }) async {
+    await _client.from('tasks').update({
+      'start_time': start?.toUtc().toIso8601String(),
+      'end_time': end?.toUtc().toIso8601String(),
+    }).eq('id', taskId);
   }
 
   // ---------- Categories ----------
@@ -59,7 +72,6 @@ class TasksRepository {
     return data.map<Subtask>((row) => Subtask.fromMap(row)).toList();
   }
 
-  /// All subtasks of the user (used for progress on the list/cards).
   Future<List<Subtask>> fetchAllSubtasks() async {
     final data = await _client.from('subtasks').select().order('created_at');
     return data.map<Subtask>((row) => Subtask.fromMap(row)).toList();
@@ -72,27 +84,11 @@ class TasksRepository {
   Future<void> setSubtaskCompleted(String subtaskId, bool completed) async {
     await _client
         .from('subtasks')
-        .update({'is_completed': completed})
-        .eq('id', subtaskId);
+        .update({'is_completed': completed}).eq('id', subtaskId);
   }
 
   Future<void> deleteSubtask(String subtaskId) async {
     await _client.from('subtasks').delete().eq('id', subtaskId);
-  }
-
-  /// Sets (or clears, when both are null) the scheduled time of a task.
-  Future<void> scheduleTask(
-    String taskId, {
-    required DateTime? start,
-    required DateTime? end,
-  }) async {
-    await _client
-        .from('tasks')
-        .update({
-          'start_time': start?.toUtc().toIso8601String(),
-          'end_time': end?.toUtc().toIso8601String(),
-        })
-        .eq('id', taskId);
   }
 }
 

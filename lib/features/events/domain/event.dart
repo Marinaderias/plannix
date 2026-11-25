@@ -7,6 +7,7 @@ class Event {
     this.description,
     this.location,
     this.color,
+    this.reminderMinutes,
   });
 
   final String id;
@@ -18,6 +19,7 @@ class Event {
   final String? color;
   final DateTime startTime;
   final DateTime endTime;
+  final int? reminderMinutes;
 
   factory Event.fromMap(Map<String, dynamic> map) {
     return Event(
@@ -28,6 +30,7 @@ class Event {
       color: map['color'] as String?,
       startTime: DateTime.parse(map['start_time'] as String).toLocal(),
       endTime: DateTime.parse(map['end_time'] as String).toLocal(),
+      reminderMinutes: map['reminder_minutes'] as int?,
     );
   }
 
@@ -40,6 +43,7 @@ class Event {
       'color': color,
       'start_time': startTime.toUtc().toIso8601String(),
       'end_time': endTime.toUtc().toIso8601String(),
+      'reminder_minutes': reminderMinutes,
     };
   }
 }

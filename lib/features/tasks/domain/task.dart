@@ -13,6 +13,7 @@ class Task {
     this.startTime,
     this.endTime,
     this.recurrence = Recurrence.none,
+    this.reminderMinutes,
   });
 
   final String id;
@@ -26,6 +27,7 @@ class Task {
   final DateTime? startTime;
   final DateTime? endTime;
   final Recurrence recurrence;
+  final int? reminderMinutes;
 
   /// Overdue = has a deadline in the past and is not completed.
   bool get isOverdue =>
@@ -48,6 +50,7 @@ class Task {
       startTime: _parseDate(map['start_time']),
       endTime: _parseDate(map['end_time']),
       recurrence: Recurrence.fromValue(map['recurrence'] as String),
+      reminderMinutes: map['reminder_minutes'] as int?,
     );
   }
 
@@ -64,6 +67,7 @@ class Task {
       'start_time': startTime?.toUtc().toIso8601String(),
       'end_time': endTime?.toUtc().toIso8601String(),
       'recurrence': recurrence.value,
+      'reminder_minutes': reminderMinutes,
     };
   }
 
