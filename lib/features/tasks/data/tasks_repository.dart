@@ -6,6 +6,7 @@ import '../domain/category.dart';
 import '../domain/subtask.dart';
 import '../domain/task.dart';
 import '../domain/task_enums.dart';
+import '../../../core/scheduling/recurrence_service.dart';
 
 class TasksRepository {
   TasksRepository(this._client);
@@ -32,10 +33,19 @@ class TasksRepository {
     await _client.from('tasks').update(task.toMap()).eq('id', task.id);
   }
 
-  Future<void> updateStatus(String taskId, TaskStatus status) async {
+  /// Updates the status. When a repeating task becomes completed, creates
+  /// the next occurrence automatically.
+  Future<void> updateStatus(Task task, TaskStatus status) async {
     await _client
         .from('tasks')
-        .update({'status': status.value}).eq('id', taskId);
+        .update({'status': status.value}).eq('id', task.id);
+
+    final justCompleted =
+        status == TaskStatus.completed && task.status != TaskStatus.completed;
+    if (justCompleted) {
+      final next = RecurrenceService.nextOccurrence(task);
+      if (next != null) await addTask(next);
+    }
   }
 
   Future<void> deleteTask(String taskId) async {

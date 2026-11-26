@@ -20,7 +20,7 @@ class TasksScreen extends ConsumerWidget {
     TaskStatus status,
   ) async {
     try {
-      await ref.read(tasksRepositoryProvider).updateStatus(task.id, status);
+      await ref.read(tasksRepositoryProvider).updateStatus(task, status);
       ref.invalidate(tasksProvider);
     } catch (_) {
       if (context.mounted) _showError(context, 'Could not update the task');
